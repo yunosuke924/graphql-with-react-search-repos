@@ -29,9 +29,14 @@ const App = () => {
         ({loading,error,data})=>{
           if (loading) return 'Loading...'
           if (error) return `Error! ${error.message}`
-          return <div></div>
+          const repositoryCount = data.search.repositoryCount
+          const repositoryUnit = repositoryCount === 1 ? 'Repositry' : 'Repositries'
+          const title = `GitHub Repositroies Search Result - ${repositoryCount} ${repositoryUnit}`
+          return <h2>{title}</h2>
+
         }
-      }</Query>
+      }
+      </Query>
     </ApolloProvider>
   )
 }
