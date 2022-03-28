@@ -5,8 +5,9 @@ import { Query } from 'react-apollo';
 import { SEARCH_REPOSITORIES } from './graphql';
 import { useState } from 'react';
 
+const PER_PAGE = 5
 const DEFAULT_STATE = {
-  first: 5,
+  first: PER_PAGE,
   after: null,
   last: null,
   before: null,
@@ -15,17 +16,14 @@ const DEFAULT_STATE = {
 
 const App = () => {
   // const {first, after, last, before, query} = DEFAULT_STATE
-  const [defaultState, setDefaultState] = useState(DEFAULT_STATE)
-  const {query} = defaultState
+  const [searchState, setSearchState] = useState(DEFAULT_STATE)
+  const {query} = searchState
   return (
     <ApolloProvider client={client}>
       <form>
-        <input value={query} onChange={(event)=> setDefaultState({...DEFAULT_STATE, query: event.target.value})}/>
+        <input value={query} onChange={(event)=> setSearchState({...DEFAULT_STATE, query: event.target.value})}/>
       </form>
-      <div>
-        hi GraphQL 20220327
-      </div>
-      <Query query={SEARCH_REPOSITORIES} variables={defaultState}>{
+      <Query query={SEARCH_REPOSITORIES} variables={searchState}>{
         ({loading,error,data})=>{
           if (loading) return 'Loading...'
           if (error) return `Error! ${error.message}`
@@ -33,7 +31,19 @@ const App = () => {
           const repositoryCount = data.search.repositoryCount
           const repositoryUnit = repositoryCount === 1 ? 'Repositry' : 'Repositries'
           const title = `GitHub Repositroies Search Result - ${repositoryCount} ${repositoryUnit}`
-          const edges = data?.search.edges
+          const search = data.search
+          const edges = search.edges
+
+          const goNext = (search) => {
+            console.log(search)
+            setSearchState({
+              first: PER_PAGE,
+              after: search.pageInfo.endCursor,
+              last: null,
+              before: null,
+              query: "フロントエンドエンジニア"
+            })
+          }
 
           return (
             <>
@@ -44,14 +54,18 @@ const App = () => {
                   return (
                     <>
                       <li key={node?.id}>
-                        <a href={node?.url} target="_blank">{node?.name}</a>
+                        <a href={node?.url} target="_blank" rel="noreferrer">{node?.name}</a>
                       </li>
                     </>
                   )
                 })}
               </ul>
-            </>
+              {search.pageInfo?.hasNextPage && (
+              <>
+                <button onClick={()=>goNext(search)}>next</button>
+              </>)}
 
+            </>
           )
         }
       }
